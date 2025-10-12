@@ -27,64 +27,46 @@ function generateBoard(n) {
 
 function removeSimilarTitle(board, position) {
     const [x, y] = position
-
     getSiblingTitle(board, [x, y]);
-    debugger
 }
 
 function getSiblingTitle(board, position) {
     const [x, y] = position
-    // const currentTitle = board[x][y]
-    // let siblingCount = 0;
+    const startedTitle = board[x][y]
+    const siblings = getSiblingTitleByPosition(board, position, startedTitle)
 
-    // const findingTitleTop = isValidSibling(x + top[0], y + top[1]) ? board[x + top[0]][y + top[1]] : 0
-    // const findingTitleBottom = isValidSibling(x + bottom[0], y + bottom[1]) ? board[x + bottom[0]][y + bottom[1]] : 0
-    // const findingTitleLeft = isValidSibling(x + left[0], y + left[1]) ? board[x + left[0]][y + left[1]] : 0
-    // const findingTitleRight = isValidSibling(x + right[0], y + right[1]) ? board[x + right[0]][y + right[1]] : 0
+    if (!siblings.length) {
+        return 0;
+    }
+    board[x][y] = null
 
-    const queue = []
+    while (siblings.length) {
+        const [x, y] = siblings.shift()
+
+        siblings.concat(getSiblingTitleByPosition(board, [x, y], startedTitle))
+    }
+}
+
+function getSiblingTitleByPosition(board, position, startedTitle) {
+    const siblings = [];
+    const [x, y] = position
 
     for (let direction in directions) {
-        const newX = x + direction[0];
-        const newY = y + direction[1];
+        const newX = x + directions[direction][0];
+        const newY = y + directions[direction][1];
         const siblingTitle = isValidSibling(newX, newY) ? board[newX][newY] : null
 
-        if (siblingTitle !== null) {
-            queue.push([newX, newY])
+        if (siblingTitle !== null && siblingTitle === startedTitle) {
+            siblings.push([newX, newY])
+            markTitle(board, [newX, newY])
         }
     }
 
-    while (queue.length) {
-        const value = queue.shift()
-    }
+    return siblings
+}
 
-    // switch (currentTitle) {
-    //     case findingTitleTop:
-    //         board[x][y] = 'yes'
-    //         siblingCount++;
-    //         getSiblingTitle(board, [x + top[0], y + top[1]]);
-    //         break;
-    //     case findingTitleBottom:
-    //         board[x][y] = 'yes'
-    //         siblingCount++;
-    //         getSiblingTitle(board, [x + bottom[0], y + bottom[1]]);
-    //         break;
-    //     case findingTitleLeft:
-    //         board[x][y] = 'yes'
-    //         siblingCount++;
-    //         getSiblingTitle(board, [x + left[0], y + left[1]]);
-    //         break;
-    //     case findingTitleRight:
-    //         board[x][y] = 'yes'
-    //         siblingCount++;
-    //         getSiblingTitle(board, [x + right[0], y + right[1]]);
-    //         break;
-    //     default:
-    //         if (siblingCount) {
-    //             board[x][y] = 'yes';
-    //         }
-    //         break;
-    // }
+function markTitle(board, position) {
+    board[position[0]][position[1]] = null;
 }
 
 function isValidSibling(row, col) {
