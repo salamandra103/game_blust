@@ -12,7 +12,9 @@ export class Menu extends Component {
     @property(Node)
     statsButton: Node = null;
 
-    start() {
+    start() { }
+
+    protected onLoad(): void {
         this.node.children.forEach(child => {
             child.on(Input.EventType.MOUSE_UP, this.onMouseUp, this);
         })
@@ -20,9 +22,6 @@ export class Menu extends Component {
         director.preloadScene("Game", function () {
             console.log('Game scene preloaded');
         });
-    }
-
-    protected onLoad(): void {
     }
 
 

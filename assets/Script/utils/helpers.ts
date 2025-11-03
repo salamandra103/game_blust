@@ -76,6 +76,8 @@ function init() {
     }
 
     // const board = generateBoard(9)
-    const board = [[1, 1, 1], [1, 0, 0], [1, 0, 0]]
+    const board = [[1, 1, 1, 1, 1], [1, 0, 0, 0, 0], [1, 0, 0, 0, 0], [1, 0, 0, 0, 0], [1, 0, 0, 0, 0]]
     removeSimilarTitle(board, [1, 1]);
+
+    console.log(board)
 }

@@ -4,34 +4,41 @@ import { Box } from './Box'
 const { ccclass, property } = _decorator;
 
 const MAX_GAME_BOARD_SIZE = 10
-const MIN_GAME_BOARD_SIZE = 5
+const MIN_GAME_BOARD_SIZE = 2
+const MAX_BOX_GAP = 10;
+const MIN_BOX_GAP = 1;
+const BOX_COLOR_TYPE_COUNT = 1;
 
+
+type Colors = 'blue' | 'red' | 'green' | 'yellow' | 'purpure'
+
+
+export type GameBoardTitle = [Node, UITransform, coords: [number, number], index: [number, number], colorIndex: number]
+export type GameBoard = Array<Array<GameBoardTitle>>
 @ccclass('Game')
 export class Game extends Component {
 
     @property({ type: Number, max: MAX_GAME_BOARD_SIZE, min: MIN_GAME_BOARD_SIZE, }) private GameBoardSize: number = MAX_GAME_BOARD_SIZE
+    @property({ type: Number, max: MAX_BOX_GAP, min: MIN_BOX_GAP, }) private BoxGap: number = MAX_BOX_GAP
     @property({ type: Prefab }) private Box: Prefab = null
     @property({ type: Layout }) private BoxesLayout: Layout = null
     @property({ type: Camera }) private Camera: Camera = null
     @property({ type: Sprite }) private Background: Sprite = null
 
     private boxSpriteFrames: Array<SpriteFrame> = []
+    public gameBoard: GameBoard = []
 
-    constructor() {
-        super()
-    }
-
-    protected onLoad(): void {
-
+    onLoad(): void {
         this.loadAssets(() => {
-            this.initPositions()
+            this.initLayoutIndexes()
             this.initGameField()
         })
     }
 
-    public loadAssets(callback) {
-
-
+    /**
+     * Загрузка ассетов
+    */
+    private loadAssets(callback) {
         const loadBlue = new Promise<SpriteFrame>((resolve, reject) => resources.load('images/block_blue/spriteFrame', SpriteFrame, (err, data) => err ? reject(err) : resolve(data)))
         const loadRed = new Promise<SpriteFrame>((resolve, reject) => resources.load('images/block_red/spriteFrame', SpriteFrame, (err, data) => err ? reject(err) : resolve(data)))
         const loadGreen = new Promise<SpriteFrame>((resolve, reject) => resources.load('images/block_green/spriteFrame', SpriteFrame, (err, data) => err ? reject(err) : resolve(data)))
@@ -45,34 +52,51 @@ export class Game extends Component {
 
     }
 
+    /**
+     * Инициализация игрового поля
+     * 1. Установка рандомного цвета тайтла.
+     * 2. Установка позиции тайтла на игровок поле.
+     * 3. Создание матрицы тайтлов аналогично игровому полю.
+     */
     private initGameField() {
-        const boxSpacing = 5;
-        const layout = this.BoxesLayout.getComponent(Layout)
-        const uiTransport = this.BoxesLayout.getComponent(UITransform)
-        // const cellSize = Math.floor((uiTransport.contentSize.width - ((this.GameBoardSize - 1) * layout.spacingX)) / this.GameBoardSize);
-        const cellSize = uiTransport.contentSize.width / this.GameBoardSize;
-        // this.BoxesLayout.cellSize = new Size(cellSize, cellSize)
+        const uiTransportLayout = this.BoxesLayout.getComponent(UITransform)
+        const cellSize = (uiTransportLayout.contentSize.width / this.GameBoardSize) - this.BoxGap;
+        const layoutBoundingBox = uiTransportLayout.getBoundingBox()
 
-        for (let i = 0; i < this.GameBoardSize * this.GameBoardSize; i++) {
-            const boxNode = instantiate(this.Box)
-            const uiTransport = boxNode.getComponent(UITransform)
-            const randomColorIndex = Math.floor(Math.random() * 5);
+        for (let i = 0; i < this.GameBoardSize; i++) {
+            this.gameBoard.push([])
+            for (let j = 0; j < this.GameBoardSize; j++) {
+                const node = instantiate(this.Box)
 
-            boxNode.getComponent(Sprite).spriteFrame = this.boxSpriteFrames[randomColorIndex]
-            uiTransport.setContentSize(new Size(cellSize, cellSize))
-            this.BoxesLayout.node.addChild(boxNode)
+                const nodeComponent = node.getComponent(Box)
+                const colorIndex = Math.floor(Math.random() * BOX_COLOR_TYPE_COUNT)
+
+                let zeroX = (layoutBoundingBox.x + cellSize * 0.5)
+                let zeroY = (layoutBoundingBox.y + cellSize * 0.5)
+                let gap = (layoutBoundingBox.width - this.GameBoardSize * cellSize) / (this.GameBoardSize - 1)
+                let x = zeroX + (j * (cellSize + gap))
+                let y = zeroY + (i * (cellSize + gap))
+
+                node.setPosition(x, y * -1)
+                nodeComponent.setSpriteFrame(this.boxSpriteFrames[colorIndex])
+                nodeComponent.setContentSize(cellSize, cellSize)
+                nodeComponent.setIndex2DMatrix([i, j])
+                this.gameBoard[i].push([node, nodeComponent.uiTransport, [node.position.x, node.position.y], [i, j], colorIndex])
+                this.BoxesLayout.node.addChild(node)
+            }
         }
     }
 
-    private initPositions() {
+    /**
+     * Инициализация порядка слоев.
+     */
+    private initLayoutIndexes() {
         this.Camera.node.setSiblingIndex(0)
         this.Background.node.setSiblingIndex(1)
         this.BoxesLayout.node.setSiblingIndex(10)
     }
 
     protected onEnable(): void {
-        // console.log('onEnable')
-
     }
 
     start() {

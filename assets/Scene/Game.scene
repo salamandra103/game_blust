@@ -2194,7 +2194,7 @@
     "_enabled": true,
     "__prefab": null,
     "_resizeMode": 2,
-    "_layoutType": 3,
+    "_layoutType": 0,
     "_cellSize": {
       "__type__": "cc.Size",
       "width": 80,
@@ -4257,6 +4257,7 @@
     "_enabled": true,
     "__prefab": null,
     "GameBoardSize": 8,
+    "BoxGap": 10,
     "Box": {
       "__uuid__": "9f6b52a8-7828-4c62-881f-7505713eef15",
       "__expectedType__": "cc.Prefab"
