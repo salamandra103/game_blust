@@ -28,39 +28,39 @@ function init() {
     }
 
     function removeSimilarTitle(board, position) {
-        const [x, y] = position
-        getSiblingTitle(board, [x, y]);
+        const [rIndex, cIndex] = position
+        getSiblingTitle(board, [rIndex, cIndex]);
     }
 
     function getSiblingTitle(board, position) {
-        const [x, y] = position
-        const startedTitle = board[x][y]
+        const [rIndex, cIndex] = position
+        const startedTitle = board[rIndex][cIndex]
         const siblings = getSiblingTitleByPosition(board, position, startedTitle)
 
         if (!siblings.length) {
             return 0;
         }
-        board[x][y] = null
+        board[rIndex][cIndex] = null
 
         while (siblings.length) {
-            const [x, y] = siblings.shift()
-
-            siblings.concat(getSiblingTitleByPosition(board, [x, y], startedTitle))
+            const [rIndex, cIndex] = siblings.shift()
+            let newSiblings = getSiblingTitleByPosition(board, [rIndex, cIndex], startedTitle)
+            siblings.push(...newSiblings)
         }
     }
 
     function getSiblingTitleByPosition(board, position, startedTitle) {
         const siblings = [];
-        const [x, y] = position
+        const [rIndex, cIndex] = position
 
         for (let direction in directions) {
-            const newX = x + directions[direction][0];
-            const newY = y + directions[direction][1];
-            const siblingTitle = isValidSibling(newX, newY) ? board[newX][newY] : null
+            const newRowIndex = rIndex + directions[direction][0];
+            const newColumnIndex = cIndex + directions[direction][1];
+            const siblingTitle = isValidSibling(newRowIndex, newColumnIndex) ? board[newRowIndex][newColumnIndex] : null
 
             if (siblingTitle !== null && siblingTitle === startedTitle) {
-                siblings.push([newX, newY])
-                markTitle(board, [newX, newY])
+                siblings.push([newRowIndex, newColumnIndex])
+                markTitle(board, [newRowIndex, newColumnIndex])
             }
         }
 

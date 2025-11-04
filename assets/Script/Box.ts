@@ -45,6 +45,8 @@ export class Box extends Component {
     private onMouseUp() {
         console.log("Position: " + this.node.position)
         console.log("Size: " + this.node.getComponent(UITransform).contentSize)
+        console.log('Id: ' + this.node.uuid)
+        console.log('Id: ' + this.indexes)
 
         const copyBoard: Array<Array<number | null>> = []
 
@@ -56,16 +58,16 @@ export class Box extends Component {
             }
         }
 
-        const resolvedBoard = getSiblingTitle(copyBoard, this.indexes)
+        const destroyedTitle = getSiblingTitle(copyBoard, this.indexes)
 
-        if (resolvedBoard === null) {
+        if (destroyedTitle === null) {
             console.log('Нет соседей')
             return;
         }
 
         // Поиск удаляемого тайтла по копии
-        for (let i = 0; i < resolvedBoard.length; i++) {
-            for (let j = 0; j < resolvedBoard[i].length; j++) {
+        for (let i = 0; i < destroyedTitle.length; i++) {
+            for (let j = 0; j < destroyedTitle[i].length; j++) {
                 if (copyBoard[i][j] === null) {
                     this.deleteNode([i, j])
                 }
@@ -75,8 +77,10 @@ export class Box extends Component {
 
     private deleteNode([rIndex, cIndex]: [number, number]) {
         if (this.gameBoard[rIndex][cIndex]) {
+            let prev = this.gameBoard[rIndex][cIndex]
             this.gameBoard[rIndex][cIndex][0].destroy()
             this.gameBoard[rIndex][cIndex] = null;
+
         }
 
     }
@@ -86,14 +90,14 @@ function getSiblingTitle<T>(board: Array<Array<T>>, position: [number, number]):
     const [rIndex, cIndex] = position
     const startedTitle = board[rIndex][cIndex]
     const siblings = getSiblingTitleByPosition(board, position, startedTitle)
-
     if (!siblings.length) {
         return null
     }
     markTitle(board, [rIndex, cIndex])
     while (siblings.length) {
         const [rIndex, cIndex] = siblings.shift()
-        siblings.concat(getSiblingTitleByPosition(board, [rIndex, cIndex], startedTitle))
+        const newSiblings = getSiblingTitleByPosition(board, [rIndex, cIndex], startedTitle)
+        siblings.push(...newSiblings)
     }
     return board
 }

@@ -1,4 +1,4 @@
-import { _decorator, Component, Node, input, Input, EventMouse, EventTouch, director, instantiate, SpriteFrame, resources, Prefab, assetManager, Layout, Camera, Sprite, Size, UITransform } from 'cc';
+import { _decorator, Component, Node, input, find, Input, EventMouse, EventTouch, director, instantiate, SpriteFrame, resources, Prefab, assetManager, Layout, Camera, Sprite, Size, UITransform } from 'cc';
 import { Box } from './Box'
 
 const { ccclass, property } = _decorator;
@@ -7,7 +7,7 @@ const MAX_GAME_BOARD_SIZE = 10
 const MIN_GAME_BOARD_SIZE = 2
 const MAX_BOX_GAP = 10;
 const MIN_BOX_GAP = 1;
-const BOX_COLOR_TYPE_COUNT = 1;
+const BOX_COLOR_TYPE_COUNT = 5;
 
 
 type Colors = 'blue' | 'red' | 'green' | 'yellow' | 'purpure'
@@ -30,8 +30,15 @@ export class Game extends Component {
 
     onLoad(): void {
         this.loadAssets(() => {
+            const shadowBoxesLayoutNode = instantiate(this.BoxesLayout.node)
+            this.BoxesLayout.node.parent.addChild(shadowBoxesLayoutNode)
+
+            const layoutBoundingBox = this.BoxesLayout.getComponent(UITransform).getBoundingBox()
+            // shadowBoxesLayoutNode.setPosition(layoutBoundingBox.center.x, layoutBoundingBox.center.y - layoutBoundingBox.height - this.BoxGap)
+
             this.initLayoutIndexes()
-            this.initGameField()
+            this.initGameField(shadowBoxesLayoutNode.getComponent(Layout))
+            this.initGameField(this.BoxesLayout)
         })
     }
 
@@ -58,12 +65,14 @@ export class Game extends Component {
      * 2. Установка позиции тайтла на игровок поле.
      * 3. Создание матрицы тайтлов аналогично игровому полю.
      */
-    private initGameField() {
-        const uiTransportLayout = this.BoxesLayout.getComponent(UITransform)
+    private initGameField(layout: Layout) {
+        const uiTransportLayout = layout.getComponent(UITransform)
         const cellSize = (uiTransportLayout.contentSize.width / this.GameBoardSize) - this.BoxGap;
         const layoutBoundingBox = uiTransportLayout.getBoundingBox()
 
-        for (let i = 0; i < this.GameBoardSize; i++) {
+        const startIndex = this.gameBoard.length ? this.gameBoard.length : 0
+
+        for (let i = startIndex; i < startIndex + this.GameBoardSize; i++) {
             this.gameBoard.push([])
             for (let j = 0; j < this.GameBoardSize; j++) {
                 const node = instantiate(this.Box)
@@ -82,9 +91,10 @@ export class Game extends Component {
                 nodeComponent.setContentSize(cellSize, cellSize)
                 nodeComponent.setIndex2DMatrix([i, j])
                 this.gameBoard[i].push([node, nodeComponent.uiTransport, [node.position.x, node.position.y], [i, j], colorIndex])
-                this.BoxesLayout.node.addChild(node)
+                layout.node.addChild(node)
             }
         }
+        console.log(this.gameBoard)
     }
 
     /**
