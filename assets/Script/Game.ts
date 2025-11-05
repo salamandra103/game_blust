@@ -9,9 +9,7 @@ const MAX_BOX_GAP = 10;
 const MIN_BOX_GAP = 1;
 const BOX_COLOR_TYPE_COUNT = 5;
 
-
 type Colors = 'blue' | 'red' | 'green' | 'yellow' | 'purpure'
-
 
 export type GameBoardTitle = [Node, UITransform, coords: [number, number], index: [number, number], colorIndex: number]
 export type GameBoard = Array<Array<GameBoardTitle>>
@@ -34,11 +32,19 @@ export class Game extends Component {
             this.BoxesLayout.node.parent.addChild(shadowBoxesLayoutNode)
 
             const layoutBoundingBox = this.BoxesLayout.getComponent(UITransform).getBoundingBox()
-            // shadowBoxesLayoutNode.setPosition(layoutBoundingBox.center.x, layoutBoundingBox.center.y - layoutBoundingBox.height - this.BoxGap)
+            shadowBoxesLayoutNode.setPosition(layoutBoundingBox.center.x, layoutBoundingBox.center.y - layoutBoundingBox.height - this.BoxGap)
 
             this.initLayoutIndexes()
             this.initGameField(shadowBoxesLayoutNode.getComponent(Layout))
             this.initGameField(this.BoxesLayout)
+
+            for (let i = 0; i < this.gameBoard.length; i++) {
+                for (let j = 0; j < this.gameBoard[0].length; j++) {
+                    this.gameBoard[i][j][0].on(Node.EventType.NODE_DESTROYED, () => {
+                    })
+                }
+            }
+
         })
     }
 
@@ -72,7 +78,7 @@ export class Game extends Component {
 
         const startIndex = this.gameBoard.length ? this.gameBoard.length : 0
 
-        for (let i = startIndex; i < startIndex + this.GameBoardSize; i++) {
+        for (let i = startIndex, k = 0; i < startIndex + this.GameBoardSize; i++) {
             this.gameBoard.push([])
             for (let j = 0; j < this.GameBoardSize; j++) {
                 const node = instantiate(this.Box)
@@ -84,7 +90,7 @@ export class Game extends Component {
                 let zeroY = (layoutBoundingBox.y + cellSize * 0.5)
                 let gap = (layoutBoundingBox.width - this.GameBoardSize * cellSize) / (this.GameBoardSize - 1)
                 let x = zeroX + (j * (cellSize + gap))
-                let y = zeroY + (i * (cellSize + gap))
+                let y = zeroY + (k * (cellSize + gap))
 
                 node.setPosition(x, y * -1)
                 nodeComponent.setSpriteFrame(this.boxSpriteFrames[colorIndex])
@@ -93,8 +99,12 @@ export class Game extends Component {
                 this.gameBoard[i].push([node, nodeComponent.uiTransport, [node.position.x, node.position.y], [i, j], colorIndex])
                 layout.node.addChild(node)
             }
+            if (k < this.GameBoardSize) {
+                k++;
+            } else {
+                k = 0;
+            }
         }
-        console.log(this.gameBoard)
     }
 
     /**
