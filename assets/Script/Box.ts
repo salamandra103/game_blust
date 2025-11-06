@@ -1,4 +1,4 @@
-import { _decorator, Component, Node, Size, Sprite, SpriteFrame, UITransform, Input, find, director, Animation } from 'cc';
+import { _decorator, Component, Node, Size, Sprite, SpriteFrame, UITransform, Input, find, director, Animation, AnimationClip, animation, Vec2, Vec3, RealCurve, js, isValid } from 'cc';
 import { Game, type GameBoard, type GameBoardTitle } from './Game'
 
 const { ccclass, property } = _decorator;
@@ -22,6 +22,7 @@ export class Box extends Component {
     private gameBoard: GameBoard = null
     private originIndex: Position = [0, 0]
     private normalizedIndex: Position = [0, 0]
+    private gameBoardSize: number = 0
 
     start() {
 
@@ -29,33 +30,23 @@ export class Box extends Component {
 
     onLoad(): void {
         this.uiTransport = this.node.getComponent(UITransform)
-        this.node.on(Input.EventType.MOUSE_UP, this.onMouseUp, this)
         this.gameBoard = director.getScene().getChildByName('Canvas').getComponent(Game).gameBoard
+        this.gameBoardSize = this.gameBoard[0].length
+        this.node.on(Input.EventType.MOUSE_UP, this.onMouseUp, this)
 
+        // this.defineAnimation().play();
         // this.normalizedIndex = getNormalizedIndex(this.originIndex, this.gameBoard[0].length)
     }
-    protected lateUpdate(dt: number): void {
-        const animation = this.node.getComponent(Animation)
-        animation.pause()
 
-        // const defaultClip = animation.defaultClip
-        // defaultClip.duration = 1.0
-        // defaultClip.keys = [[0.0, 0.5, 2.0]]
-        // defaultClip.curves = [{
-        //     modifiers: [
-        //         'cc.UITransform.contentSize.width'
-        //     ],
-        //     data: {
-        //         keys: 0,
-        //         values: [0, 300, 150]
-        //     }
-        // }]
+
+    update(deltaTime: number) {
+
     }
 
-    update(deltaTime: number) { }
 
     protected onDestroy(): void {
     }
+
 
     public setSpriteFrame(spriteFrame: SpriteFrame): void {
         this.node.getComponent(Sprite).spriteFrame = spriteFrame
@@ -75,26 +66,25 @@ export class Box extends Component {
         console.log('Id: ' + this.node.uuid)
         console.log('Id: ' + this.originIndex)
 
-        const startIndex = this.gameBoard.length > this.gameBoard[0].length ? this.gameBoard.length - this.gameBoard[0].length : 0
-
+        const startIndex = this.gameBoard.length > this.gameBoardSize ? this.gameBoard.length - this.gameBoardSize : 0
 
         const copyBoard = getCopyArrayByVerticalBoundary(this.gameBoard, startIndex, (item) => {
             if (item) {
                 return item[4]
             }
         }) // Создание упрощенной копии массива с границами текущего поля
-        const destroyedTitle = getSiblingTitle(copyBoard, getNormalizedIndex(this.originIndex, this.gameBoard[0].length))
+        const destroyedTitle = getSiblingTitle(copyBoard, getNormalizedIndex(this.originIndex, this.gameBoardSize))
 
         if (destroyedTitle === null) {
             console.log('Нет соседей')
-            return;
+            return
         }
 
         // Поиск удаляемого тайтла по копии
         for (let i = 0; i < destroyedTitle.length; i++) {
             for (let j = 0; j < destroyedTitle[i].length; j++) {
                 if (copyBoard[i][j] === null) {
-                    const boxDenormalizedIndex = getDenormalizedIndex([i, j], this.gameBoard[0].length) // Индексы тайтла в оригинальном игровок поле
+                    const boxDenormalizedIndex = getDenormalizedIndex([i, j], this.gameBoardSize) // Индексы тайтла в оригинальном игровок поле
                     this.deleteNode(boxDenormalizedIndex)
                 }
             }
@@ -102,8 +92,41 @@ export class Box extends Component {
     }
 
     private deleteNode([rIndex, cIndex]: Position) {
-        this.gameBoard[rIndex][cIndex][0].destroy();
+        this.gameBoard[rIndex][cIndex][0].destroy()
         this.gameBoard[rIndex][cIndex] = null
+    }
+
+    private defineAnimation(): Animation {
+        const animationClip = new AnimationClip('scaleAnimation')
+        const track = new animation.VectorTrack()
+
+        animationClip.duration = 2.0
+        animationClip.wrapMode = 2
+        animationClip.keys = [[0.0, 0.5, 1.0]]
+
+        track.componentsCount = 2
+        track.path = new animation.TrackPath().toProperty('scale')
+
+        const [x, y] = track.channels()
+
+        const vec2KeyFrames: [number, Vec2][] = [
+            [0.0, new Vec2(1.0, 1.0)],
+            [0.5, new Vec2(1.1, 1.1)],
+            [1.0, new Vec2(1.0, 1.0)],
+        ]
+
+        x.curve.assignSorted(vec2KeyFrames.map(([time, vec2]) => [time, { value: vec2.x }]))
+        y.curve.assignSorted(vec2KeyFrames.map(([time, vec2]) => [time, { value: vec2.y }]))
+
+        animationClip.addTrack(track)
+
+        let animationComponent = this.node.getComponent(Animation)
+
+        if (!animationComponent) {
+            animationComponent = this.node.addComponent(Animation)
+        }
+        animationComponent.defaultClip = animationClip
+        return animationComponent
     }
 }
 
@@ -114,9 +137,10 @@ function getSiblingTitle<T>(board: Array<Array<T>>, position: Position): Array<A
     if (!siblings.length) {
         return null
     }
-    markTitle(board, [rIndex, cIndex])
+    // markTitle(board, [rIndex, cIndex])
     while (siblings.length) {
         const [rIndex, cIndex] = siblings.shift()
+        markTitle(board, [rIndex, cIndex]) // new line
         const newSiblings = getSiblingTitleByPosition(board, [rIndex, cIndex], startedTitle)
         siblings.push(...newSiblings)
     }
@@ -124,18 +148,18 @@ function getSiblingTitle<T>(board: Array<Array<T>>, position: Position): Array<A
 }
 
 function getSiblingTitleByPosition<T>(board: Array<Array<T>>, position: Position, targetTitle: T): Array<Position> {
-    const siblings: Array<Position> = [];
+    const siblings: Array<Position> = []
     const [rIndex, cIndex] = position
 
     for (let direction in DIRECTIONS) {
-        const newRowIndex = rIndex + DIRECTIONS[direction][0];
-        const newColumnIndex = cIndex + DIRECTIONS[direction][1];
+        const newRowIndex = rIndex + DIRECTIONS[direction][0]
+        const newColumnIndex = cIndex + DIRECTIONS[direction][1]
 
         const siblingTitle = isValidSibling(board, newRowIndex, newColumnIndex) ? board[newRowIndex][newColumnIndex] : null
 
         if (siblingTitle !== null && siblingTitle === targetTitle) {
             siblings.push([newRowIndex, newColumnIndex])
-            markTitle(board, [newRowIndex, newColumnIndex])
+            // markTitle(board, [newRowIndex, newColumnIndex])
         }
     }
 
@@ -143,7 +167,7 @@ function getSiblingTitleByPosition<T>(board: Array<Array<T>>, position: Position
 }
 
 function markTitle(board: Array<Array<unknown>>, [rIndex, cIndex]: Position): void {
-    board[rIndex][cIndex] = null;
+    board[rIndex][cIndex] = null
 }
 
 function isValidSibling(board: Array<Array<unknown>>, row: number, col: number): boolean {
