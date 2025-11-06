@@ -61,6 +61,7 @@ export class Box extends Component {
     }
 
     private onMouseUp() {
+        console.log('MouseUp')
         console.log("Position: " + this.node.position)
         console.log("Size: " + this.node.getComponent(UITransform).contentSize)
         console.log('Id: ' + this.node.uuid)
