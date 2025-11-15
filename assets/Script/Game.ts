@@ -26,7 +26,8 @@ export class Game extends Component {
     private boxSpriteFrames: Array<SpriteFrame> = []
     public gameBoard: GameBoard = []
 
-    onLoad(): void {
+
+    start() {
         this.loadAssets(() => {
             const shadowBoxesLayoutNode = instantiate(this.BoxesLayout.node)
             this.BoxesLayout.node.parent.addChild(shadowBoxesLayoutNode)
@@ -40,12 +41,45 @@ export class Game extends Component {
 
             for (let i = 0; i < this.gameBoard.length; i++) {
                 for (let j = 0; j < this.gameBoard[0].length; j++) {
+                    const nodeComponent = this.gameBoard[i][j][0].getComponent(Box)
+                    nodeComponent.boxAnimation.play('scaleAnimation')
                     this.gameBoard[i][j][0].on(Node.EventType.NODE_DESTROYED, () => {
                     })
                 }
             }
 
         })
+
+    }
+
+    update(deltaTime: number) {
+        // console.log('update')
+    }
+
+
+    onLoad(): void {
+        // this.loadAssets(() => {
+        //     const shadowBoxesLayoutNode = instantiate(this.BoxesLayout.node)
+        //     this.BoxesLayout.node.parent.addChild(shadowBoxesLayoutNode)
+
+        //     const layoutBoundingBox = this.BoxesLayout.getComponent(UITransform).getBoundingBox()
+        //     shadowBoxesLayoutNode.setPosition(layoutBoundingBox.center.x, layoutBoundingBox.center.y - layoutBoundingBox.height - this.BoxGap)
+
+        //     this.initLayoutIndexes()
+        //     this.initGameField(shadowBoxesLayoutNode.getComponent(Layout))
+        //     this.initGameField(this.BoxesLayout)
+        //     
+        //     for (let i = 0; i < this.gameBoard.length; i++) {
+        //         for (let j = 0; j < this.gameBoard[0].length; j++) {
+        //             const nodeComponent = this.gameBoard[i][j][0].getComponent(Box)
+        //             nodeComponent.boxAnimation.play()
+
+        //             this.gameBoard[i][j][0].on(Node.EventType.NODE_DESTROYED, () => {
+        //             })
+        //         }
+        //     }
+
+        // })
     }
 
     /**
@@ -117,22 +151,6 @@ export class Game extends Component {
     }
 
     protected onEnable(): void {
-    }
-
-    start() {
-        // console.log('start')
-        // this.node.on(Input.EventType.MOUSE_UP, this.onMouseUp, this);
-        // let node = instantiate(this.exampleBox);
-
-        // resources.preload("prefab/Box", Prefab);
-
-        // resources.load("prefab/Box", Prefab, (err, data) => {
-        // });
-
-    }
-
-    update(deltaTime: number) {
-        // console.log('update')
     }
 
     protected onDisable(): void {

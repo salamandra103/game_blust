@@ -23,6 +23,7 @@ export class Box extends Component {
     private originIndex: Position = [0, 0]
     private normalizedIndex: Position = [0, 0]
     private gameBoardSize: number = 0
+    public boxAnimation: Animation = null;
 
     start() {
 
@@ -32,9 +33,11 @@ export class Box extends Component {
         this.uiTransport = this.node.getComponent(UITransform)
         this.gameBoard = director.getScene().getChildByName('Canvas').getComponent(Game).gameBoard
         this.gameBoardSize = this.gameBoard[0].length
+        this.boxAnimation = this.defineAnimation()
         this.node.on(Input.EventType.MOUSE_UP, this.onMouseUp, this)
+        this.node.on(Input.EventType.MOUSE_UP, this.onMouseDown, this)
 
-        // this.defineAnimation().play();
+
         // this.normalizedIndex = getNormalizedIndex(this.originIndex, this.gameBoard[0].length)
     }
 
@@ -92,6 +95,14 @@ export class Box extends Component {
         }
     }
 
+    private onMouseDown() {
+        console.log('MouseUp box')
+        console.log("Position: " + this.node.position)
+        console.log("Size: " + this.node.getComponent(UITransform).contentSize)
+        console.log('Id: ' + this.node.uuid)
+        console.log('Id: ' + this.originIndex)
+    }
+
     private deleteNode([rIndex, cIndex]: Position) {
         this.gameBoard[rIndex][cIndex][0].destroy()
         this.gameBoard[rIndex][cIndex] = null
@@ -101,7 +112,7 @@ export class Box extends Component {
         const animationClip = new AnimationClip('scaleAnimation')
         const track = new animation.VectorTrack()
 
-        animationClip.duration = 2.0
+        animationClip.duration = 1.0
         animationClip.wrapMode = 2
         animationClip.keys = [[0.0, 0.5, 1.0]]
 
@@ -112,12 +123,15 @@ export class Box extends Component {
 
         const vec2KeyFrames: [number, Vec2][] = [
             [0.0, new Vec2(1.0, 1.0)],
-            [0.5, new Vec2(1.1, 1.1)],
+            [0.5, new Vec2(1.05, 1.05)],
             [1.0, new Vec2(1.0, 1.0)],
         ]
 
         x.curve.assignSorted(vec2KeyFrames.map(([time, vec2]) => [time, { value: vec2.x }]))
         y.curve.assignSorted(vec2KeyFrames.map(([time, vec2]) => [time, { value: vec2.y }]))
+        // x.curve.clear()
+        // y.curve.clear()
+
 
         animationClip.addTrack(track)
 
@@ -126,7 +140,8 @@ export class Box extends Component {
         if (!animationComponent) {
             animationComponent = this.node.addComponent(Animation)
         }
-        animationComponent.defaultClip = animationClip
+        animationComponent.addClip(animationClip, animationClip.name)
+        // animationComponent.defaultClip = animationClip
         return animationComponent
     }
 }
