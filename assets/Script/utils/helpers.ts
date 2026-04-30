@@ -54,9 +54,14 @@ export function getCopyArrayByVerticalBoundary<T>(originBoard: Array<Array<T>>, 
   const arrLength = originBoard[0].length;
   for (let i = 0; i < arrLength; i++) {
     result.push([]);
-    for (let j = 0; j < arrLength; j++) {
-      result[i].push(callback(originBoard[i + startIndex][j]));
+    try {
+      for (let j = 0; j < arrLength; j++) {
+        result[i].push(callback(originBoard[i + startIndex][j]));
+      }
+    } catch (err) {
+      debugger
     }
+
   }
   return result;
 }

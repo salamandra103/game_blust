@@ -1,4 +1,4 @@
-import { _decorator, Component, Node, Input, instantiate, SpriteFrame, resources, Prefab, Layout, Camera, Sprite, UITransform, Animation, Vec2 } from "cc";
+import { _decorator, Component, Node, Input, instantiate, SpriteFrame, resources, Prefab, Layout, Camera, Sprite, UITransform, Animation, Vec2, Label } from "cc";
 import { Box } from "./Box";
 
 const { ccclass, property } = _decorator;
@@ -11,49 +11,48 @@ const BOX_COLOR_TYPE_COUNT = 5;
 
 const BOARDS_GAP = 120;
 
+const DEFAULT_LEVEL = 1
+const MIN_SCORE = 0;
+const MAX_SCORE = 500
+
 export let colorMap = [];
 
 export type GameBoardTile = [Node, coords: [number, number], index: [number, number], colorIndex: number, isActive: boolean];
 export type GameBoard = Array<Array<GameBoardTile>>;
 @ccclass("Game")
 export class Game extends Component {
+
+  @property(Label) level: Label = null;
+  @property(Label) score: Label = null;
+
+  @property({ type: Camera }) camera: Camera = null;
+
+  @property({ type: Prefab }) private boxPrefab: Prefab = null;
+  @property({ type: Layout }) private boxesLayout: Layout = null;
+  @property({ type: Sprite }) private backgroundSprite: Sprite = null;
   @property({
     type: Number,
     max: MAX_GAME_BOARD_SIZE,
     min: MIN_GAME_BOARD_SIZE,
   }) private gameBoardSize: number = MAX_GAME_BOARD_SIZE
-  @property({ type: Number, max: MAX_BOX_GAP, min: MIN_BOX_GAP }) private BoxGap: number = MAX_BOX_GAP;
-  @property({ type: Prefab }) private Box: Prefab = null;
-  @property({ type: Layout }) private BoxesLayout: Layout = null;
-  @property({ type: Camera }) private Camera: Camera = null;
-  @property({ type: Sprite }) private Background: Sprite = null;
+  @property({ type: Number, max: MAX_BOX_GAP, min: MIN_BOX_GAP }) private boxGap: number = MAX_BOX_GAP;
 
   private boxSpriteFrames: Array<SpriteFrame> = [];
+  private _currentLevel: number = DEFAULT_LEVEL
+  private _currentScore: number = MIN_SCORE
   public gameBoard: GameBoard = [];
   public gameBoardMap = new Map<[number, number], GameBoardTile>
 
+  protected start(): void { }
 
-  protected onLoad(): void {
-    this.loadAssets(() => {
-      const layoutBoundingBox = this.BoxesLayout.getComponent(UITransform).getBoundingBox();
-
-      this.initLayoutIndexes();
-      this.initGameField(this.BoxesLayout);
-      this.initGameField(this.BoxesLayout);
-
-      // this.BoxesLayout.node.setPosition(layoutBoundingBox.center.x, layoutBoundingBox.center.y + layoutBoundingBox.height + this.BoxGap + BOARDS_GAP)
-
-      for (let i = 0; i < this.gameBoard.length; i++) {
-        for (let j = 0; j < this.gameBoard[0].length; j++) {
-          // this.gameBoard[i][j][0].getComponent(Box).boxAnimation.play("scaleAnimation");
-        }
-      }
-    });
+  protected async onLoad() {
+    await this.loadAssets();
+    // const layoutBoundingBox = this.boxesLayout.getComponent(UITransform).getBoundingBox();
+    this.initGame()
+    // this.boxesLayout.node.setPosition(layoutBoundingBox.center.x, layoutBoundingBox.center.y + layoutBoundingBox.height + this.boxGap + BOARDS_GAP)
   }
 
   protected onEnable(): void { }
-
-  protected start(): void { }
 
   protected update(deltaTime: number): void { }
 
@@ -106,12 +105,12 @@ export class Game extends Component {
         if (i === 0) {
           let h = i;
           while (!this.gameBoard[h][j][4]) {
-            const uiTransportLayout = this.BoxesLayout.getComponent(UITransform);
+            const uiTransportLayout = this.boxesLayout.getComponent(UITransform);
             const layoutBoundingBox = uiTransportLayout.getBoundingBox();
-            const cellSize = uiTransportLayout.contentSize.width / this.gameBoardSize - this.BoxGap;
+            const cellSize = uiTransportLayout.contentSize.width / this.gameBoardSize - this.boxGap;
 
             const zeroXPostion = layoutBoundingBox.x + cellSize * 0.5;
-            const zeroYPosition = layoutBoundingBox.y - layoutBoundingBox.height - BOARDS_GAP - this.BoxGap + cellSize * 0.5;
+            const zeroYPosition = layoutBoundingBox.y - layoutBoundingBox.height - BOARDS_GAP - this.boxGap + cellSize * 0.5;
             const gap = (layoutBoundingBox.width - this.gameBoardSize * cellSize) / (this.gameBoardSize - 1);
 
             let x = zeroXPostion + j * (cellSize + gap);
@@ -122,7 +121,7 @@ export class Game extends Component {
             const tile: GameBoardTile = [node, [node.position.x, node.position.y], [h, j], colorIndex, true]
             this.gameBoard[h][j] = tile
 
-            this.BoxesLayout.node.addChild(node);
+            this.boxesLayout.node.addChild(node);
 
             h++;
 
@@ -135,7 +134,7 @@ export class Game extends Component {
   /**
    * Загрузка ассетов
    */
-  private loadAssets(callback) {
+  private async loadAssets() {
     const loadBlue = new Promise<SpriteFrame>((resolve, reject) =>
       resources.load("images/block_blue/spriteFrame", SpriteFrame, (err, data) => (err ? reject(err) : resolve(data))),
     );
@@ -152,16 +151,17 @@ export class Game extends Component {
       resources.load("images/block_purpure/spriteFrame", SpriteFrame, (err, data) => (err ? reject(err) : resolve(data))),
     );
 
-    Promise.all([loadBlue, loadRed, loadGreen, loadYellow, loadPurpure]).then((sprites) => {
-      this.boxSpriteFrames = sprites;
-      colorMap = ["blue", "red", "green", "yellow", "purpure"];
-      callback();
-    });
+    const sprites = await Promise.all([loadBlue, loadRed, loadGreen, loadYellow, loadPurpure]);
+    this.boxSpriteFrames = sprites;
+    colorMap = sprites.map(sprite => sprite.name);
   }
 
   private createTile(position: Vec2, size: number, index: [number, number], colorIndex: number): Node {
-    const node = instantiate(this.Box);
+    const node = instantiate(this.boxPrefab);
     const nodeComponent = node.getComponent(Box);
+
+    nodeComponent.init(this)
+
     node.setPosition(position.x, position.y);
     nodeComponent.setSpriteFrame(this.boxSpriteFrames[colorIndex]);
     nodeComponent.setContentSize(size, size);
@@ -177,13 +177,13 @@ export class Game extends Component {
    */
   private initGameField(layout: Layout) {
     const uiTransportLayout = layout.getComponent(UITransform);
-    const cellSize = uiTransportLayout.contentSize.width / this.gameBoardSize - this.BoxGap;
+    const cellSize = uiTransportLayout.contentSize.width / this.gameBoardSize - this.boxGap;
     const layoutBoundingBox = uiTransportLayout.getBoundingBox();
 
     const startIndex = this.gameBoard.length ? this.gameBoard.length : 0;
 
     const zeroXPostion = layoutBoundingBox.x + cellSize * 0.5;
-    const zeroYPosition = layoutBoundingBox.y - layoutBoundingBox.height - BOARDS_GAP - this.BoxGap + cellSize * 0.5;
+    const zeroYPosition = layoutBoundingBox.y - layoutBoundingBox.height - BOARDS_GAP - this.boxGap + cellSize * 0.5;
     const gap = (layoutBoundingBox.width - this.gameBoardSize * cellSize) / (this.gameBoardSize - 1);
 
     const rowsLength = this.gameBoard.length + this.gameBoardSize;
@@ -202,20 +202,64 @@ export class Game extends Component {
 
         this.gameBoardMap.set([i, j], tile);
         this.gameBoard[i].push(tile);
-
-        setTimeout(() => {
-          layout.node.addChild(node);
-        }, 100 * i)
+        layout.node.addChild(node);
       }
     }
   }
 
+  private initGame() {
+    this.initMetaInfo()
+    this.initLayoutIndexes();
+    this.initGameField(this.boxesLayout);
+    this.initGameField(this.boxesLayout);
+    this.initAnimation()
+  }
+
+  private initMetaInfo() {
+    this.currentLevel = DEFAULT_LEVEL
+    this.currentScore = MIN_SCORE
+  }
+
+  private initAnimation() {
+    for (let i = 0; i < this.gameBoard.length; i++) {
+      for (let j = 0; j < this.gameBoard[0].length; j++) {
+        this.gameBoard[i][j][0].getComponent(Box).boxAnimation.play("scaleAnimation");
+      }
+    }
+  }
+
+  get currentLevel(): number {
+    return this._currentLevel;
+  }
+
+  set currentLevel(value: number) {
+    this._currentLevel = value
+    this.level.string = String(value)
+    this.currentScore = 0;
+  }
+
+  get currentScore(): number {
+    return this._currentScore;
+  }
+
+  set currentScore(value: number) {
+    this._currentScore = value
+    this.score.string = String(value)
+  }
+
+  public calculateScore(destroyedTileCount: number) {
+    if (this.currentScore + destroyedTileCount * 10 > MAX_SCORE) {
+      this.currentLevel++;
+    }
+    this.currentScore += destroyedTileCount * 10
+  }
+
   /**
-   * Инициализация порядка слоев.
-   */
+  * Инициализация порядка слоев.
+  */
   private initLayoutIndexes() {
-    this.Camera.node.setSiblingIndex(0);
-    this.Background.node.setSiblingIndex(1);
-    this.BoxesLayout.node.setSiblingIndex(10);
+    this.camera.node.setSiblingIndex(0);
+    this.backgroundSprite.node.setSiblingIndex(1);
+    this.boxesLayout.node.setSiblingIndex(10);
   }
 }
