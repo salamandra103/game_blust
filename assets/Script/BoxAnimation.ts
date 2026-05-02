@@ -11,12 +11,6 @@ type Track = animation.RealTrack | animation.VectorTrack | animation.ColorTrack 
 export class BoxAnimation extends Component {
   private clips: Set<AnimationClip> = new Set();
 
-  protected start(): void { }
-
-  protected onLoad(): void { }
-
-  protected update(deltaTime: number): void { }
-
   public createBaseAnimation<T extends Track>(
     clipName: string,
     Track: TrackConstructor<T>,

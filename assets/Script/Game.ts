@@ -43,7 +43,9 @@ export class Game extends Component {
   public gameBoard: GameBoard = [];
   public gameBoardMap = new Map<[number, number], GameBoardTile>
 
-  protected start(): void { }
+  protected start(): void {
+    console.log(this)
+  }
 
   protected async onLoad() {
     await this.loadAssets();
