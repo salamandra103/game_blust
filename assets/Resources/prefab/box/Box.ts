@@ -1,9 +1,9 @@
 import { _decorator, Component, Sprite, SpriteFrame, UITransform, Input, director, Animation, animation, Vec2, AnimationState, AnimationClip } from "cc";
-import { Game, type GameBoard, type GameBoardTile, colorMap } from "./Game";
+import { Game, type GameBoard, type GameBoardTile, colorMap } from "../../../Script/Game";
 
 import { BoxAnimation } from "./BoxAnimation";
 
-import { getCopyArrayByVerticalBoundary, getDenormalizedIndex, getNormalizedIndex, getSiblingItem, type IndexInMatrix } from './utils/helpers'
+import { getCopyArrayByVerticalBoundary, getDenormalizedIndex, getNormalizedIndex, getSiblingItem, type IndexInMatrix } from '../../../Script/utils/helpers'
 
 const { ccclass } = _decorator;
 

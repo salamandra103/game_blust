@@ -1,5 +1,7 @@
 import { _decorator, Component, Node, Input, instantiate, SpriteFrame, resources, Prefab, Layout, Camera, Sprite, UITransform, Animation, Vec2, Label } from "cc";
-import { Box } from "./Box";
+import { Box } from "../Resources/Prefab/Box/Box";
+
+import { ModalController } from './ModalController'
 
 const { ccclass, property } = _decorator;
 
@@ -36,6 +38,8 @@ export class Game extends Component {
     min: MIN_GAME_BOARD_SIZE,
   }) private gameBoardSize: number = MAX_GAME_BOARD_SIZE
   @property({ type: Number, max: MAX_BOX_GAP, min: MIN_BOX_GAP }) private boxGap: number = MAX_BOX_GAP;
+
+  @property({ type: Layout }) private winModalWindowLayout: Layout = null
 
   private boxSpriteFrames: Array<SpriteFrame> = [];
   private _currentLevel: number = DEFAULT_LEVEL
@@ -250,8 +254,10 @@ export class Game extends Component {
   }
 
   public calculateScore(destroyedTileCount: number) {
-    if (this.currentScore + destroyedTileCount * 10 > MAX_SCORE) {
-      this.currentLevel++;
+    if (this.currentScore + destroyedTileCount * 10 > 50) {
+      const modalController = this.winModalWindowLayout.node.getComponent(ModalController)
+      modalController.show()
+      // this.currentLevel++;
     }
     this.currentScore += destroyedTileCount * 10
   }
