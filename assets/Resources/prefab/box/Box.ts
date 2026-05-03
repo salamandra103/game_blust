@@ -155,7 +155,6 @@ export class Box extends Component {
     director.getScene().getChildByName("Canvas").getComponent(Game).calculateScore(removePromise.length)
 
     await Promise.all(removePromise)
-    // this.game.shuffleGameBoard()
     director.getScene().getChildByName("Canvas").getComponent(Game).shuffleGameBoard();
   }
 
@@ -166,6 +165,5 @@ export class Box extends Component {
   private deleteNode([rIndex, cIndex]: IndexInMatrix) {
     this.game.gameBoard[rIndex][cIndex][0].destroy();
     this.game.gameBoard[rIndex][cIndex][4] = false;
-    // this.gameBoard[rIndex][cIndex] = null
   }
 }

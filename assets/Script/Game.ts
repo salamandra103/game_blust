@@ -1,4 +1,4 @@
-import { _decorator, Component, Node, Input, instantiate, SpriteFrame, resources, Prefab, Layout, Camera, Sprite, UITransform, Animation, Vec2, Label } from "cc";
+import { _decorator, Component, Node, Input, instantiate, SpriteFrame, resources, Prefab, Layout, Camera, Sprite, UITransform, Animation, Vec2, Label, director } from "cc";
 import { Box } from "../Resources/Prefab/Box/Box";
 
 import { ModalController } from './ModalController'
@@ -30,7 +30,7 @@ export class Game extends Component {
   @property({ type: Camera }) camera: Camera = null;
 
   @property({ type: Prefab }) private boxPrefab: Prefab = null;
-  @property({ type: Layout }) private boxesLayout: Layout = null;
+  @property({ type: Layout }) private boxesContainer: Layout = null;
   @property({ type: Sprite }) private backgroundSprite: Sprite = null;
   @property({
     type: Number,
@@ -39,7 +39,8 @@ export class Game extends Component {
   }) private gameBoardSize: number = MAX_GAME_BOARD_SIZE
   @property({ type: Number, max: MAX_BOX_GAP, min: MIN_BOX_GAP }) private boxGap: number = MAX_BOX_GAP;
 
-  @property({ type: Layout }) private winModalWindowLayout: Layout = null
+  @property({ type: Layout }) private modaWindowWin: Layout = null
+  @property({ type: Layout }) private modaWindowLose: Layout = null
 
   private boxSpriteFrames: Array<SpriteFrame> = [];
   private _currentLevel: number = DEFAULT_LEVEL
@@ -47,24 +48,18 @@ export class Game extends Component {
   public gameBoard: GameBoard = [];
   public gameBoardMap = new Map<[number, number], GameBoardTile>
 
-  protected start(): void {
-    console.log(this)
-  }
-
   protected async onLoad() {
     await this.loadAssets();
-    // const layoutBoundingBox = this.boxesLayout.getComponent(UITransform).getBoundingBox();
     this.initGame()
-    // this.boxesLayout.node.setPosition(layoutBoundingBox.center.x, layoutBoundingBox.center.y + layoutBoundingBox.height + this.boxGap + BOARDS_GAP)
+
+    const modalController = this.modaWindowWin.node.getComponent(ModalController);
+    modalController.eventTarget.addEventListener('onMouseUpSuccessButton', this.restartGame)
+    modalController.eventTarget.addEventListener('onMouseUpErrorButton', this.restartGame)
   }
 
-  protected onEnable(): void { }
-
-  protected update(deltaTime: number): void { }
-
-  protected onDisable(): void { }
-
-  protected onDestroy(): void { }
+  public restartGame() {
+    director.loadScene('Game');
+  }
 
   /**
    * Перемещение соседних блоков, после удаления
@@ -106,12 +101,12 @@ export class Game extends Component {
         }
 
         /**
-      * Заполнение пустых клетов сверху-вниз
-      */
+        * Заполнение пустых клетов сверху-вниз
+        */
         if (i === 0) {
           let h = i;
           while (!this.gameBoard[h][j][4]) {
-            const uiTransportLayout = this.boxesLayout.getComponent(UITransform);
+            const uiTransportLayout = this.boxesContainer.getComponent(UITransform);
             const layoutBoundingBox = uiTransportLayout.getBoundingBox();
             const cellSize = uiTransportLayout.contentSize.width / this.gameBoardSize - this.boxGap;
 
@@ -127,7 +122,7 @@ export class Game extends Component {
             const tile: GameBoardTile = [node, [node.position.x, node.position.y], [h, j], colorIndex, true]
             this.gameBoard[h][j] = tile
 
-            this.boxesLayout.node.addChild(node);
+            this.boxesContainer.node.addChild(node);
 
             h++;
 
@@ -216,8 +211,8 @@ export class Game extends Component {
   private initGame() {
     this.initMetaInfo()
     this.initLayoutIndexes();
-    this.initGameField(this.boxesLayout);
-    this.initGameField(this.boxesLayout);
+    this.initGameField(this.boxesContainer);
+    this.initGameField(this.boxesContainer);
     this.initAnimation()
   }
 
@@ -254,10 +249,11 @@ export class Game extends Component {
   }
 
   public calculateScore(destroyedTileCount: number) {
-    if (this.currentScore + destroyedTileCount * 10 > 50) {
-      const modalController = this.winModalWindowLayout.node.getComponent(ModalController)
-      modalController.show()
-      // this.currentLevel++;
+    if (this.currentScore + destroyedTileCount * 10 >= MAX_SCORE) {
+      this.currentScore = MAX_SCORE;
+      const modalController = this.modaWindowWin.node.getComponent(ModalController);
+      modalController.show();
+      return;
     }
     this.currentScore += destroyedTileCount * 10
   }
@@ -268,6 +264,6 @@ export class Game extends Component {
   private initLayoutIndexes() {
     this.camera.node.setSiblingIndex(0);
     this.backgroundSprite.node.setSiblingIndex(1);
-    this.boxesLayout.node.setSiblingIndex(10);
+    this.boxesContainer.node.setSiblingIndex(10);
   }
 }
