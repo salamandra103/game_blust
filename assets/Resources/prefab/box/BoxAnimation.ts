@@ -1,5 +1,5 @@
 import { _decorator, AnimationClip, Component, animation, Vec2, Animation } from "cc";
-const { ccclass, property } = _decorator;
+const { ccclass } = _decorator;
 
 interface TrackConstructor<T extends Track> {
   new(): T;

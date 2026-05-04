@@ -49,7 +49,7 @@ export class Game extends Component {
   private _currentScore: number = MIN_SCORE
   private _reloadCount: number = 3
   public gameBoard: GameBoard = [];
-  public gameBoardMap = new Map<[number, number], GameBoardTile>
+  public gameBoardMap = new Map<[number, number], GameBoardTile>()
 
   protected async onLoad() {
     await this.loadAssets();
@@ -69,10 +69,7 @@ export class Game extends Component {
     if (this.reloadCount) {
       this.currentScore = 0
       this.reloadCount--;
-      this.clearGameBoard();
-      this.initGameField(this.boxesContainer);
-      this.initGameField(this.boxesContainer);
-      this.initAnimation()
+      this.initGameField();
     } else {
       this.modaWindowLose.node.getComponent(ModalController).show()
     }
@@ -86,7 +83,6 @@ export class Game extends Component {
    * Перемещение соседних блоков, после удаления
    */
   public shuffleGameBoard() {
-    console.log('shuffle')
     for (let i = this.gameBoard.length - 1; i >= 0; i--) {
       for (let j = this.gameBoard[0].length - 1; j >= 0; j--) {
         let k = i - 1;
@@ -145,9 +141,9 @@ export class Game extends Component {
             this.gameBoard[h][j] = tile
 
             this.boxesContainer.node.addChild(node);
+            node.getComponent(Box).boxAnimation.play('scaleAnimation');
 
             h++;
-
           }
         }
       }
@@ -198,8 +194,12 @@ export class Game extends Component {
    * 2. Установка позиции тайтла на игровок поле.
    * 3. Создание матрицы тайтлов аналогично игровому полю.
    */
-  private initGameField(layout: Layout) {
-    const uiTransportLayout = layout.getComponent(UITransform);
+  private initGameField() {
+    this.boxesContainer.node.removeAllChildren()
+    this.gameBoard = []
+    this.gameBoardMap = new Map()
+
+    const uiTransportLayout = this.boxesContainer.getComponent(UITransform);
     const cellSize = uiTransportLayout.contentSize.width / this.gameBoardSize - this.boxGap;
     const layoutBoundingBox = uiTransportLayout.getBoundingBox();
 
@@ -209,7 +209,7 @@ export class Game extends Component {
     const zeroYPosition = layoutBoundingBox.y - layoutBoundingBox.height - BOARDS_GAP - this.boxGap + cellSize * 0.5;
     const gap = (layoutBoundingBox.width - this.gameBoardSize * cellSize) / (this.gameBoardSize - 1);
 
-    const rowsLength = this.gameBoard.length + this.gameBoardSize;
+    const rowsLength = this.gameBoardSize * 2;
     const colLength = this.gameBoardSize
 
     for (let i = startIndex; i < rowsLength; i++) {
@@ -225,7 +225,7 @@ export class Game extends Component {
 
         this.gameBoardMap.set([i, j], tile);
         this.gameBoard[i].push(tile);
-        layout.node.addChild(node);
+        this.boxesContainer.node.addChild(node);
       }
     }
   }
@@ -233,23 +233,13 @@ export class Game extends Component {
   private initGame() {
     this.initMetaInfo()
     this.initLayoutIndexes();
-    this.initGameField(this.boxesContainer);
-    this.initGameField(this.boxesContainer);
-    this.initAnimation()
+    this.initGameField();
   }
 
   private initMetaInfo() {
     this.currentLevel = this._currentLevel
     this.currentScore = this._currentScore
     this.reloadCount = this._reloadCount
-  }
-
-  private initAnimation() {
-    for (let i = 0; i < this.gameBoard.length; i++) {
-      for (let j = 0; j < this.gameBoard[0].length; j++) {
-        this.gameBoard[i][j][0].getComponent(Box).boxAnimation.play("scaleAnimation");
-      }
-    }
   }
 
   get currentLevel(): number {
@@ -297,11 +287,5 @@ export class Game extends Component {
     this.camera.node.setSiblingIndex(0);
     this.backgroundSprite.node.setSiblingIndex(1);
     this.boxesContainer.node.setSiblingIndex(10);
-  }
-
-  private clearGameBoard() {
-    this.boxesContainer.node.removeAllChildren()
-    this.gameBoard = []
-    this.gameBoardMap = new Map<[number, number], GameBoardTile>
   }
 }

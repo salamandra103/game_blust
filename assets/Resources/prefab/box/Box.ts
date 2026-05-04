@@ -1,5 +1,5 @@
-import { _decorator, Component, Sprite, SpriteFrame, UITransform, Input, director, Animation, animation, Vec2, AnimationState, AnimationClip } from "cc";
-import { Game, type GameBoard, type GameBoardTile, colorMap } from "../../../Script/Game";
+import { _decorator, Component, Sprite, SpriteFrame, UITransform, Input, director, Animation, animation, Vec2, AnimationState } from "cc";
+import { Game, colorMap } from "../../../Script/Game";
 
 import { BoxAnimation } from "./BoxAnimation";
 
@@ -24,8 +24,6 @@ export class Box extends Component {
   }
 
   protected onLoad(): void {
-    this.node.on(Input.EventType.MOUSE_UP, this.onMouseUp, this);
-
     const boxAnimation = this.node.getComponent(BoxAnimation);
     const { track: scaleAnimationTrack, clip: scaleAnimationClip } = boxAnimation.createBaseAnimation("scaleAnimation", animation.VectorTrack, {
       duration: 1,
@@ -52,11 +50,13 @@ export class Box extends Component {
     ], 'scale');
     boxAnimation.addAnimationClip(scaleClip);
     boxAnimation.addAnimationClip(destoryClip);
-
     this.boxAnimation = boxAnimation.getAnimation();
   }
 
-  protected update(deltaTime: number) { }
+  protected start(): void {
+    this.node.on(Input.EventType.MOUSE_UP, this.onMouseUp, this);
+    this.boxAnimation.play('scaleAnimation');
+  }
 
   protected onDestroy(): void {
   }

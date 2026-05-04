@@ -1,4 +1,4 @@
-import { _decorator, BlockInputEventsComponent, Color, Component, Graphics, Node, view, UIOpacity, tween, Vec3, UITransform, Layers, Widget, find, Layout, Input } from 'cc';
+import { _decorator, BlockInputEventsComponent, Color, Component, Graphics, view, UIOpacity, tween, Layout, Input } from 'cc';
 const { ccclass, property } = _decorator;
 
 @ccclass('ModalController')

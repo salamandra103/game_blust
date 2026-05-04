@@ -1,4 +1,4 @@
-import { _decorator, Component, Node, input, Input, EventMouse, EventTouch, director, Layout, game } from "cc";
+import { _decorator, Component, Node, Input, director, game } from "cc";
 const { ccclass, property } = _decorator;
 
 @ccclass("Menu")
