@@ -26,6 +26,7 @@ export class Game extends Component {
 
   @property(Label) level: Label = null;
   @property(Label) score: Label = null;
+  @property(Label) reload: Label = null
 
   @property({ type: Camera }) camera: Camera = null;
 
@@ -41,10 +42,12 @@ export class Game extends Component {
 
   @property({ type: Layout }) private modaWindowWin: Layout = null
   @property({ type: Layout }) private modaWindowLose: Layout = null
+  @property({ type: Layout }) private reloadButton: Layout = null
 
   private boxSpriteFrames: Array<SpriteFrame> = [];
   private _currentLevel: number = DEFAULT_LEVEL
   private _currentScore: number = MIN_SCORE
+  private _reloadCount: number = 3
   public gameBoard: GameBoard = [];
   public gameBoardMap = new Map<[number, number], GameBoardTile>
 
@@ -52,9 +55,27 @@ export class Game extends Component {
     await this.loadAssets();
     this.initGame()
 
-    const modalController = this.modaWindowWin.node.getComponent(ModalController);
-    modalController.eventTarget.addEventListener('onMouseUpSuccessButton', this.restartGame)
-    modalController.eventTarget.addEventListener('onMouseUpErrorButton', this.restartGame)
+    const modalControllerWin = this.modaWindowWin.node.getComponent(ModalController);
+    const modalControllerLose = this.modaWindowLose.node.getComponent(ModalController);
+    modalControllerWin.eventTarget.addEventListener('onMouseUpSuccessButton', this.restartGame)
+    modalControllerWin.eventTarget.addEventListener('onMouseUpErrorButton', this.restartGame)
+    modalControllerLose.eventTarget.addEventListener('onMouseUpSuccessButton', this.restartGame)
+    modalControllerLose.eventTarget.addEventListener('onMouseUpErrorButton', this.restartGame)
+
+    this.reloadButton.node.on(Input.EventType.MOUSE_UP, this.reloadGame, this)
+  }
+
+  public reloadGame() {
+    if (this.reloadCount) {
+      this.currentScore = 0
+      this.reloadCount--;
+      this.clearGameBoard();
+      this.initGameField(this.boxesContainer);
+      this.initGameField(this.boxesContainer);
+      this.initAnimation()
+    } else {
+      this.modaWindowLose.node.getComponent(ModalController).show()
+    }
   }
 
   public restartGame() {
@@ -65,6 +86,7 @@ export class Game extends Component {
    * Перемещение соседних блоков, после удаления
    */
   public shuffleGameBoard() {
+    console.log('shuffle')
     for (let i = this.gameBoard.length - 1; i >= 0; i--) {
       for (let j = this.gameBoard[0].length - 1; j >= 0; j--) {
         let k = i - 1;
@@ -217,8 +239,9 @@ export class Game extends Component {
   }
 
   private initMetaInfo() {
-    this.currentLevel = DEFAULT_LEVEL
-    this.currentScore = MIN_SCORE
+    this.currentLevel = this._currentLevel
+    this.currentScore = this._currentScore
+    this.reloadCount = this._reloadCount
   }
 
   private initAnimation() {
@@ -248,6 +271,15 @@ export class Game extends Component {
     this.score.string = String(value)
   }
 
+  get reloadCount(): number {
+    return this._reloadCount;
+  }
+
+  set reloadCount(value: number) {
+    this._reloadCount = value
+    this.reload.string = String(value)
+  }
+
   public calculateScore(destroyedTileCount: number) {
     if (this.currentScore + destroyedTileCount * 10 >= MAX_SCORE) {
       this.currentScore = MAX_SCORE;
@@ -265,5 +297,11 @@ export class Game extends Component {
     this.camera.node.setSiblingIndex(0);
     this.backgroundSprite.node.setSiblingIndex(1);
     this.boxesContainer.node.setSiblingIndex(10);
+  }
+
+  private clearGameBoard() {
+    this.boxesContainer.node.removeAllChildren()
+    this.gameBoard = []
+    this.gameBoardMap = new Map<[number, number], GameBoardTile>
   }
 }
