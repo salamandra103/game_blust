@@ -52,8 +52,10 @@ export class Game extends Component {
   public gameBoardMap = new Map<[number, number], GameBoardTile>()
 
   protected async onLoad() {
+    this.initMetaInfo()
+    this.initLayoutIndexes();
     await this.loadAssets();
-    this.initGame()
+    this.initGameField();
 
     const modalControllerWin = this.modaWindowWin.node.getComponent(ModalController);
     const modalControllerLose = this.modaWindowLose.node.getComponent(ModalController);
@@ -62,7 +64,7 @@ export class Game extends Component {
     modalControllerLose.eventTarget.addEventListener('onMouseUpSuccessButton', this.restartGame)
     modalControllerLose.eventTarget.addEventListener('onMouseUpErrorButton', this.restartGame)
 
-    this.reloadButton.node.on(Input.EventType.MOUSE_UP, this.reloadGame, this)
+    this.reloadButton.node.on(Input.EventType.TOUCH_END, this.reloadGame, this)
   }
 
   public reloadGame() {
@@ -101,7 +103,7 @@ export class Game extends Component {
               this.gameBoard[i][j][0].getComponent(Box).setPosition(oldBox[1][0], oldBox[1][1]);
               this.gameBoard[i][j][0].getComponent(Box).setIndex2DMatrix([oldBox[2][0], oldBox[2][1]]);
               this.gameBoard[i][j][0].on(
-                Input.EventType.MOUSE_UP,
+                Input.EventType.TOUCH_END,
                 this.gameBoard[i][j][0].getComponent(Box).onMouseUp,
                 this.gameBoard[i][j][0].getComponent(Box),
               );
@@ -219,21 +221,17 @@ export class Game extends Component {
         let y = (zeroYPosition + i * (cellSize + gap) + (i >= this.gameBoardSize ? BOARDS_GAP : 0)) * -1;
 
         const colorIndex = Math.floor(Math.random() * BOX_COLOR_TYPE_COUNT);
-        const node = this.createTile(new Vec2(x, y), cellSize, [i, j], colorIndex)
+        const node = this.createTile(new Vec2(x, y + layoutBoundingBox.height), cellSize, [i, j], colorIndex)
 
-        const tile: GameBoardTile = [node, [node.position.x, node.position.y], [i, j], colorIndex, true]
+        const tile: GameBoardTile = [node, [x, y], [i, j], colorIndex, true]
 
         this.gameBoardMap.set([i, j], tile);
         this.gameBoard[i].push(tile);
         this.boxesContainer.node.addChild(node);
+
+        node.getComponent(Box).setPosition(x, y, 0.5)
       }
     }
-  }
-
-  private initGame() {
-    this.initMetaInfo()
-    this.initLayoutIndexes();
-    this.initGameField();
   }
 
   private initMetaInfo() {

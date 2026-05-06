@@ -1697,7 +1697,7 @@
   {
     "__type__": "cc.Node",
     "_name": "GamePanelContainer",
-    "_objFlags": 512,
+    "_objFlags": 0,
     "__editorExtras__": {},
     "_parent": {
       "__id__": 2
@@ -1755,7 +1755,7 @@
   {
     "__type__": "cc.Node",
     "_name": "Mask",
-    "_objFlags": 512,
+    "_objFlags": 0,
     "__editorExtras__": {},
     "_parent": {
       "__id__": 42
@@ -1810,7 +1810,7 @@
   {
     "__type__": "cc.Node",
     "_name": "BoxesContainer",
-    "_objFlags": 512,
+    "_objFlags": 0,
     "__editorExtras__": {},
     "_parent": {
       "__id__": 43
@@ -2464,7 +2464,7 @@
     "_prefab": null,
     "_lpos": {
       "__type__": "cc.Vec3",
-      "x": -91.4115,
+      "x": 0,
       "y": -2.1535199999999577,
       "z": 0
     },
@@ -3129,7 +3129,7 @@
         "__id__": 89
       }
     ],
-    "_active": true,
+    "_active": false,
     "_components": [
       {
         "__id__": 93
@@ -3808,7 +3808,7 @@
     "__prefab": null,
     "_contentSize": {
       "__type__": "cc.Size",
-      "width": 345.646,
+      "width": 162.823,
       "height": 301.844
     },
     "_anchorPoint": {

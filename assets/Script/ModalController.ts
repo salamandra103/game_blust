@@ -32,13 +32,13 @@ export class ModalController extends Component {
     public show(): void {
         this.init();
         this.node.active = true;
-        this.successButton?.node.on(Input.EventType.MOUSE_UP, this.onMouseUpSuccessButton, this)
-        this.errorButton?.node.on(Input.EventType.MOUSE_UP, this.onMouseUpErrorButton, this)
+        this.successButton?.node.on(Input.EventType.TOUCH_END, this.onMouseUpSuccessButton, this)
+        this.errorButton?.node.on(Input.EventType.TOUCH_END, this.onMouseUpErrorButton, this)
     }
     public hide(): void {
         this.node.active = false;
-        this.successButton?.node.off(Input.EventType.MOUSE_UP, this.onMouseUpSuccessButton, this)
-        this.errorButton?.node.off(Input.EventType.MOUSE_UP, this.onMouseUpErrorButton, this)
+        this.successButton?.node.off(Input.EventType.TOUCH_END, this.onMouseUpSuccessButton, this)
+        this.errorButton?.node.off(Input.EventType.TOUCH_END, this.onMouseUpErrorButton, this)
     }
 
     protected onEnable(): void {

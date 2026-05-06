@@ -1,4 +1,4 @@
-import { _decorator, Component, Sprite, SpriteFrame, UITransform, Input, director, Animation, animation, Vec2, AnimationState } from "cc";
+import { _decorator, Component, Sprite, SpriteFrame, UITransform, Input, director, Animation, animation, Vec2, AnimationState, Node, tween, Vec3 } from "cc";
 import { Game, colorMap } from "../../../Script/Game";
 
 import { BoxAnimation } from "./BoxAnimation";
@@ -54,7 +54,7 @@ export class Box extends Component {
   }
 
   protected start(): void {
-    this.node.on(Input.EventType.MOUSE_UP, this.onMouseUp, this);
+    this.node.on(Input.EventType.TOUCH_END, this.onMouseUp, this);
     this.boxAnimation.play('scaleAnimation');
   }
 
@@ -73,31 +73,13 @@ export class Box extends Component {
     this.originIndex = originIndex;
   }
 
-  public setPosition(x: number, y: number) {
-    const oldPosition = this.node.getPosition().toVec2()
-    const boxAnimation = this.node.getComponent(BoxAnimation)
-    const boxAnimationComponent = boxAnimation.getAnimation();
-
-    const { track: moveAnimationTrack, clip: moveAnimationClip } = boxAnimation.createBaseAnimation("moveAnimation", animation.VectorTrack, {
-      duration: 0.1,
-      keys: [[0.0, 0.1]],
-      wrapMode: 0,
+  public setPosition(x: number, y: number, animationDuration?: number = 0.1) {
+    return new Promise<void>((resolve) => {
+      tween(this.node)
+        .to(animationDuration, { position: new Vec3(x, y, 0) })
+        .call(resolve)
+        .start();
     });
-
-    const moveClip = boxAnimation.createVectorAnimation(moveAnimationTrack, moveAnimationClip, [
-      oldPosition,
-      new Vec2(x, y),
-    ], 'position');
-
-    boxAnimation.addAnimationClip(moveClip);
-    boxAnimationComponent.play("moveAnimation")
-    boxAnimationComponent.once(Animation.EventType.FINISHED,
-      (type, state) => {
-        boxAnimation.removeAnimationClip(moveAnimationClip)
-        this.node.setPosition(x, y);
-      },
-      this)
-
   }
 
   public async onMouseUp() {
