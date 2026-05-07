@@ -22,11 +22,13 @@ export class ModalController extends Component {
     private onMouseUpSuccessButton() {
         console.log('success')
         this.eventTarget.dispatchEvent(new Event('onMouseUpSuccessButton'))
+        this.node.active = false
     }
 
     private onMouseUpErrorButton() {
         console.log('error')
         this.eventTarget.dispatchEvent(new Event('onMouseUpErrorButton'))
+        this.node.active = false
     }
 
     public show(): void {

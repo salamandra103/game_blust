@@ -1,4 +1,4 @@
-import { _decorator, Component, Node, Input, instantiate, SpriteFrame, resources, Prefab, Layout, Camera, Sprite, UITransform, Animation, Vec2, Label, director } from "cc";
+import { _decorator, Component, Node, Input, instantiate, SpriteFrame, resources, Prefab, Layout, Camera, Sprite, UITransform, Animation, Vec2, Label, director, tween } from "cc";
 import { Box } from "../Resources/Prefab/Box/Box";
 
 import { ModalController } from './ModalController'
@@ -16,6 +16,7 @@ const BOARDS_GAP = 120;
 const DEFAULT_LEVEL = 1
 const MIN_SCORE = 0;
 const MAX_SCORE = 500
+const DEFAULT_RELOAD_COUNT = 3;
 
 export let colorMap = [];
 
@@ -47,9 +48,14 @@ export class Game extends Component {
   private boxSpriteFrames: Array<SpriteFrame> = [];
   private _currentLevel: number = DEFAULT_LEVEL
   private _currentScore: number = MIN_SCORE
-  private _reloadCount: number = 3
+  private _reloadCount: number = DEFAULT_RELOAD_COUNT
   public gameBoard: GameBoard = [];
   public gameBoardMap = new Map<[number, number], GameBoardTile>()
+
+  constructor() {
+    super()
+    this.restartGame = this.restartGame.bind(this)
+  }
 
   protected async onLoad() {
     this.initMetaInfo()
@@ -67,7 +73,13 @@ export class Game extends Component {
     this.reloadButton.node.on(Input.EventType.TOUCH_END, this.reloadGame, this)
   }
 
-  public reloadGame() {
+  public reloadGame(force?: boolean) {
+    if (force) {
+      this.currentScore = 0
+      this.reloadCount = DEFAULT_RELOAD_COUNT
+      this.initGameField();
+      return;
+    }
     if (this.reloadCount) {
       this.currentScore = 0
       this.reloadCount--;
@@ -78,7 +90,7 @@ export class Game extends Component {
   }
 
   public restartGame() {
-    director.loadScene('Game');
+    this.reloadGame(true)
   }
 
   /**
@@ -256,7 +268,7 @@ export class Game extends Component {
 
   set currentScore(value: number) {
     this._currentScore = value
-    this.score.string = String(value)
+    tween(this.score).to(0.2, { string: String(value) }).start()
   }
 
   get reloadCount(): number {

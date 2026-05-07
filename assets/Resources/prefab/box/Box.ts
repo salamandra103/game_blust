@@ -73,11 +73,11 @@ export class Box extends Component {
     this.originIndex = originIndex;
   }
 
-  public setPosition(x: number, y: number, animationDuration?: number = 0.1) {
+  public setPosition(x: number, y: number, animationDuration: number = 0.5) {
     return new Promise<void>((resolve) => {
       tween(this.node)
-        .to(animationDuration, { position: new Vec3(x, y, 0) })
-        .call(resolve)
+        .to(animationDuration, { position: new Vec3(x, y, 0) }, { easing: 'bounceOut' })
+        .call(() => resolve())
         .start();
     });
   }
@@ -121,11 +121,9 @@ export class Box extends Component {
             new Promise<void>((resolve, reject) => {
               this.boxAnimation.on(
                 Animation.EventType.FINISHED,
-                (type, state) => {
-                  _this.onDestroyAnimationFinished(type, state, () => {
-                    _this.deleteNode(boxDenormalizedIndex);
-                    resolve();
-                  });
+                () => {
+                  _this.deleteNode(boxDenormalizedIndex);
+                  resolve();
                 },
                 this,
               );
@@ -138,10 +136,6 @@ export class Box extends Component {
 
     await Promise.all(removePromise)
     director.getScene().getChildByName("Canvas").getComponent(Game).shuffleGameBoard();
-  }
-
-  private onDestroyAnimationFinished(type: Animation.EventType, state: AnimationState, callback: () => void) {
-    callback();
   }
 
   private deleteNode([rIndex, cIndex]: IndexInMatrix) {
